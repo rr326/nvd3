@@ -11210,8 +11210,11 @@ nv.models.scatter = function() {
               .attr('class', function(d,i) { return 'nv-path-'+i; });
           pointPaths.exit().remove();
           pointPaths
-              .attr('d', function(d) {
-                if (d.data.length === 0)
+              .attr('d', function(d,i) {
+                  if (!d || ! d.data ) {
+                      return 'M 0 0';
+                  }                
+                  if (d.data.length === 0)
                     return 'M 0 0'
                 else
                     return 'M' + d.data.join('L') + 'Z';
