@@ -49,14 +49,14 @@ nv.log = function() {
   return arguments[arguments.length - 1];
 };
 
-
+// RR - tweaks to allow strict mode (removing arguments.callee). Problem upon concat and minification
 nv.render = function render(step) {
   step = step || 1; // number of graphs to generate in each timeout loop
 
   nv.render.active = true;
   nv.dispatch.render_start();
 
-  setTimeout(function() {
+  setTimeout(function innerFn() {
     var chart, graph;
 
     for (var i = 0; i < step && (graph = nv.render.queue[i]); i++) {
@@ -67,7 +67,7 @@ nv.render = function render(step) {
 
     nv.render.queue.splice(0, i);
 
-    if (nv.render.queue.length) setTimeout(arguments.callee, 0);
+    if (nv.render.queue.length) setTimeout(innerFn, 0);
     else {
       nv.dispatch.render_end();
       nv.render.active = false;
@@ -133,44 +133,44 @@ the rectangle. The dispatch is given one object which contains the mouseX/Y loca
 It also has 'pointXValue', which is the conversion of mouseX to the x-axis scale.
 */
 nv.interactiveGuideline = function() {
-	"use strict";
-	var tooltip = nv.models.tooltip();
-	//Public settings
-	var width = null
-	, height = null
+  "use strict";
+  var tooltip = nv.models.tooltip();
+  //Public settings
+  var width = null
+  , height = null
     //Please pass in the bounding chart's top and left margins
     //This is important for calculating the correct mouseX/Y positions.
-	, margin = {left: 0, top: 0}
-	, xScale = d3.scale.linear()
-	, yScale = d3.scale.linear()
-	, dispatch = d3.dispatch('elementMousemove', 'elementMouseout','elementDblclick')
-	, showGuideLine = true
-	, svgContainer = null  
+  , margin = {left: 0, top: 0}
+  , xScale = d3.scale.linear()
+  , yScale = d3.scale.linear()
+  , dispatch = d3.dispatch('elementMousemove', 'elementMouseout','elementDblclick')
+  , showGuideLine = true
+  , svgContainer = null  
     //Must pass in the bounding chart's <svg> container.
     //The mousemove event is attached to this container.
-	;
+  ;
 
-	//Private variables
-	var isMSIE = navigator.userAgent.indexOf("MSIE") !== -1  //Check user-agent for Microsoft Internet Explorer.
-	;
+  //Private variables
+  var isMSIE = navigator.userAgent.indexOf("MSIE") !== -1  //Check user-agent for Microsoft Internet Explorer.
+  ;
 
 
-	function layer(selection) {
-		selection.each(function(data) {
-				var container = d3.select(this);
-				
-				var availableWidth = (width || 960), availableHeight = (height || 400);
+  function layer(selection) {
+    selection.each(function(data) {
+        var container = d3.select(this);
+        
+        var availableWidth = (width || 960), availableHeight = (height || 400);
 
-				var wrap = container.selectAll("g.nv-wrap.nv-interactiveLineLayer").data([data]);
-				var wrapEnter = wrap.enter()
-								.append("g").attr("class", " nv-wrap nv-interactiveLineLayer");
-								
-				
-				wrapEnter.append("g").attr("class","nv-interactiveGuideLine");
-				
-				if (!svgContainer) {
-					return;
-				}
+        var wrap = container.selectAll("g.nv-wrap.nv-interactiveLineLayer").data([data]);
+        var wrapEnter = wrap.enter()
+                .append("g").attr("class", " nv-wrap nv-interactiveLineLayer");
+                
+        
+        wrapEnter.append("g").attr("class","nv-interactiveGuideLine");
+        
+        if (!svgContainer) {
+          return;
+        }
 
                 function mouseHandler() {
                       var d3mouse = d3.mouse(this);
@@ -202,7 +202,7 @@ nv.interactiveGuideline = function() {
                             subtractMargin = false;
 
                          if (d3.event.target.className.baseVal.match("nv-legend"))
-                         	mouseOutAnyReason = true;
+                          mouseOutAnyReason = true;
                           
                       }
 
@@ -220,13 +220,13 @@ nv.interactiveGuideline = function() {
                         || mouseOutAnyReason
                         ) 
                       {
-                      		if (isMSIE) {
-                      			if (d3.event.relatedTarget 
-                      				&& d3.event.relatedTarget.ownerSVGElement === undefined
-                      				&& d3.event.relatedTarget.className.match(tooltip.nvPointerEventsClass)) {
-                      				return;
-                      			}
-                      		}
+                          if (isMSIE) {
+                            if (d3.event.relatedTarget 
+                              && d3.event.relatedTarget.ownerSVGElement === undefined
+                              && d3.event.relatedTarget.className.match(tooltip.nvPointerEventsClass)) {
+                              return;
+                            }
+                          }
                             dispatch.elementMouseout({
                                mouseX: mouseX,
                                mouseY: mouseY
@@ -252,75 +252,75 @@ nv.interactiveGuideline = function() {
                       }
                 }
 
-				svgContainer
-				      .on("mousemove",mouseHandler, true)
-				      .on("mouseout" ,mouseHandler,true)
+        svgContainer
+              .on("mousemove",mouseHandler, true)
+              .on("mouseout" ,mouseHandler,true)
                       .on("dblclick" ,mouseHandler)
-				      ;
+              ;
 
-				 //Draws a vertical guideline at the given X postion.
-				layer.renderGuideLine = function(x) {
-				 	if (!showGuideLine) return;
-				 	var line = wrap.select(".nv-interactiveGuideLine")
-				 	      .selectAll("line")
-				 	      .data((x != null) ? [nv.utils.NaNtoZero(x)] : [], String);
+         //Draws a vertical guideline at the given X postion.
+        layer.renderGuideLine = function(x) {
+          if (!showGuideLine) return;
+          var line = wrap.select(".nv-interactiveGuideLine")
+                .selectAll("line")
+                .data((x != null) ? [nv.utils.NaNtoZero(x)] : [], String);
 
-				 	line.enter()
-				 		.append("line")
-				 		.attr("class", "nv-guideline")
-				 		.attr("x1", function(d) { return d;})
-				 		.attr("x2", function(d) { return d;})
-				 		.attr("y1", availableHeight)
-				 		.attr("y2",0)
-				 		;
-				 	line.exit().remove();
+          line.enter()
+            .append("line")
+            .attr("class", "nv-guideline")
+            .attr("x1", function(d) { return d;})
+            .attr("x2", function(d) { return d;})
+            .attr("y1", availableHeight)
+            .attr("y2",0)
+            ;
+          line.exit().remove();
 
-				}
-		});
-	}
+        }
+    });
+  }
 
-	layer.dispatch = dispatch;
-	layer.tooltip = tooltip;
+  layer.dispatch = dispatch;
+  layer.tooltip = tooltip;
 
-	layer.margin = function(_) {
-	    if (!arguments.length) return margin;
-	    margin.top    = typeof _.top    != 'undefined' ? _.top    : margin.top;
-	    margin.left   = typeof _.left   != 'undefined' ? _.left   : margin.left;
-	    return layer;
+  layer.margin = function(_) {
+      if (!arguments.length) return margin;
+      margin.top    = typeof _.top    != 'undefined' ? _.top    : margin.top;
+      margin.left   = typeof _.left   != 'undefined' ? _.left   : margin.left;
+      return layer;
     };
 
-	layer.width = function(_) {
-		if (!arguments.length) return width;
-		width = _;
-		return layer;
-	};
+  layer.width = function(_) {
+    if (!arguments.length) return width;
+    width = _;
+    return layer;
+  };
 
-	layer.height = function(_) {
-		if (!arguments.length) return height;
-		height = _;
-		return layer;
-	};
+  layer.height = function(_) {
+    if (!arguments.length) return height;
+    height = _;
+    return layer;
+  };
 
-	layer.xScale = function(_) {
-		if (!arguments.length) return xScale;
-		xScale = _;
-		return layer;
-	};
+  layer.xScale = function(_) {
+    if (!arguments.length) return xScale;
+    xScale = _;
+    return layer;
+  };
 
-	layer.showGuideLine = function(_) {
-		if (!arguments.length) return showGuideLine;
-		showGuideLine = _;
-		return layer;
-	};
+  layer.showGuideLine = function(_) {
+    if (!arguments.length) return showGuideLine;
+    showGuideLine = _;
+    return layer;
+  };
 
-	layer.svgContainer = function(_) {
-		if (!arguments.length) return svgContainer;
-		svgContainer = _;
-		return layer;
-	};
+  layer.svgContainer = function(_) {
+    if (!arguments.length) return svgContainer;
+    svgContainer = _;
+    return layer;
+  };
 
 
-	return layer;
+  return layer;
 };
 
 /* Utility class that uses d3.bisect to find the index in a given array, where a search value can be inserted.
@@ -337,7 +337,7 @@ Has the following known issues:
    * Won't work if there are duplicate x coordinate values.
 */
 nv.interactiveBisect = function (values, searchVal, xAccessor) {
-	  "use strict";
+    "use strict";
       if (! values instanceof Array) return null;
       if (typeof xAccessor !== 'function') xAccessor = function(d,i) { return d.x;}
 
@@ -1186,8 +1186,8 @@ nv.utils.optionsFunc = function(args) {
           axisLabel.enter().append('text').attr('class', 'nv-axislabel');
           axisLabel
               .style('text-anchor', rotateYLabel ? 'middle' : 'begin')
-              .attr('transform', rotateYLabel ? 'rotate(90)' : '')
-              .attr('y', rotateYLabel ? (-Math.max(margin.right,width) + 12) : -10) //TODO: consider calculating this based on largest tick width... OR at least expose this on chart
+              .attr('transform', rotateYLabel ? 'rotate(90)' : '')  // RR - added axisLabelDistance option
+              .attr('y', rotateYLabel ? (-Math.max(margin.right,width) + axisLabelDistance) : -10) //TODO: consider calculating this based on largest tick width... OR at least expose this on chart
               .attr('x', rotateYLabel ? (scale.range()[0] / 2) : axis.tickPadding());
           if (showMaxMin) {
             var axisMaxMin = wrap.selectAll('g.nv-axisMaxMin')
@@ -3222,11 +3222,7 @@ nv.models.cumulativeLineChart = function() {
       if (!line.values) {
          return line;
       }
-      var indexValue = line.values[idx];
-      if (indexValue == null) {
-        return line;
-      }
-      var v = lines.y()(indexValue, idx);
+      var v = lines.y()(line.values[idx], idx);
 
       //TODO: implement check below, and disable series if series loses 100% or more cause divide by 0 issue
       if (v < -.95 && !noErrorCheck) {
@@ -5115,6 +5111,7 @@ nv.models.indentedTree = function() {
     return chart;
   };
 
+
   //============================================================
 
 
@@ -5429,6 +5426,7 @@ nv.models.lineChart = function() {
     , noData = 'No Data Available.'
     , dispatch = d3.dispatch('tooltipShow', 'tooltipHide', 'stateChange', 'changeState')
     , transitionDuration = 250
+    , clamp = false // RR
     ;
 
   xAxis
@@ -5504,6 +5502,9 @@ nv.models.lineChart = function() {
           .attr('y', margin.top + availableHeight / 2)
           .text(function(d) { return d });
 
+
+        // RR - Need to remove existing data lines if they already exist on update
+        container.select('g').remove()
         return chart;
       } else {
         container.selectAll('.nv-noData').remove();
@@ -5517,6 +5518,9 @@ nv.models.lineChart = function() {
 
       x = lines.xScale();
       y = lines.yScale();
+
+      x.clamp(clamp); //RR
+      y.clamp(clamp);
 
       //------------------------------------------------------------
 
@@ -5853,6 +5857,13 @@ nv.models.lineChart = function() {
   chart.transitionDuration = function(_) {
     if (!arguments.length) return transitionDuration;
     transitionDuration = _;
+    return chart;
+  };
+
+  // RR
+  chart.clamp = function(_) {
+    if (!arguments.length) return clamp;
+    clamp = _;
     return chart;
   };
 
@@ -9631,16 +9642,25 @@ nv.models.multiChart = function() {
       lines2.yDomain(yScale2.domain())
       bars2.yDomain(yScale2.domain())
       stack2.yDomain(yScale2.domain())
+        
+        
+      // TODO: Need to do pull request and get all "RR" changes merged back in.
+      // RR- Serious bug here! This does not delete the last series when you deselect (because it only does the transition if it isn't the last data series.        
+      var hasLines1 = data.filter(function(d) {return d.type == 'line' && d.yAxis == 1})
+      var hasLines2 = data.filter(function(d) {return d.type == 'line' && d.yAxis == 2})
+      var hasBars1 = data.filter(function(d) {return d.type == 'bar' && d.yAxis == 1})
+      var hasBars2 = data.filter(function(d) {return d.type == 'bar' && d.yAxis == 2})
+      var hasStack1 = data.filter(function(d) {return d.type == 'area' && d.yAxis == 1})
+      var hasStack2 = data.filter(function(d) {return d.type == 'area' && d.yAxis == 2})        
 
-      if(dataStack1.length){d3.transition(stack1Wrap).call(stack1);}
-      if(dataStack2.length){d3.transition(stack2Wrap).call(stack2);}
+      if(hasStack1.length){d3.transition(stack1Wrap).call(stack1);}
+      if(hasStack2.length){d3.transition(stack2Wrap).call(stack2);}
 
-      if(dataBars1.length){d3.transition(bars1Wrap).call(bars1);}
-      if(dataBars2.length){d3.transition(bars2Wrap).call(bars2);}
+      if(hasBars1.length){d3.transition(bars1Wrap).call(bars1);}
+      if(hasBars2.length){d3.transition(bars2Wrap).call(bars2);}
 
-      if(dataLines1.length){d3.transition(lines1Wrap).call(lines1);}
-      if(dataLines2.length){d3.transition(lines2Wrap).call(lines2);}
-      
+      if(hasLines1.length){d3.transition(lines1Wrap).call(lines1);}
+      if(hasLines2.length){d3.transition(lines2Wrap).call(lines2);}
 
 
       xAxis
@@ -9670,6 +9690,10 @@ nv.models.multiChart = function() {
       g.select('.y2.axis')
           .style('opacity', series2.length ? 1 : 0)
           .attr('transform', 'translate(' + x.range()[1] + ',0)');
+
+      // RR: y1 axis wasn't disappear when deselected
+      g.select('.y1.axis')
+          .style('opacity', series1.length ? 1 : 0)
 
       legend.dispatch.on('stateChange', function(newState) { 
         chart.update();
@@ -11190,7 +11214,11 @@ nv.models.scatter = function() {
               .attr('class', function(d,i) { return 'nv-path-'+i; });
           pointPaths.exit().remove();
           pointPaths
-              .attr('d', function(d) {
+              .attr('d', function(d,i) {
+                  if (!d || ! d.data ) {
+                       // RR VERY strange - with multichart, on update of data, some of the voronoi are undefined!  No idea why - but maybe this will fix it
+                      return 'M 0 0';
+                  }
                 if (d.data.length === 0)
                     return 'M 0 0'
                 else
@@ -12949,7 +12977,7 @@ nv.models.sparkline = function() {
               var yValues = data.map(function(d, i) { return getY(d,i); });
               function pointIndex(index) {
                   if (index != -1) {
-	              var result = data[index];
+                var result = data[index];
                       result.pointIndex = index;
                       return result;
                   } else {
@@ -13722,9 +13750,9 @@ nv.models.stackedArea = function() {
   };
 
   chart.interpolate = function(_) {
-	    if (!arguments.length) return interpolate;
-	    interpolate = _;
-	    return chart;
+      if (!arguments.length) return interpolate;
+      interpolate = _;
+      return chart;
   };
   //============================================================
 
