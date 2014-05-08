@@ -14400,7 +14400,7 @@ nv.models.stackedAreaChart = function() {
 
   return chart;
 }
-})(); in production
+})();.d3 in production
 
 window.nv = nv;
 
