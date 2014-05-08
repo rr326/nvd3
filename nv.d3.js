@@ -9642,14 +9642,21 @@ nv.models.multiChart = function() {
       bars2.yDomain(yScale2.domain())
       stack2.yDomain(yScale2.domain())
 
-      if(dataStack1.length){d3.transition(stack1Wrap).call(stack1);}
-      if(dataStack2.length){d3.transition(stack2Wrap).call(stack2);}
+      var hasLines1 = data.filter(function(d) {return d.type == 'line' && d.yAxis == 1})
+      var hasLines2 = data.filter(function(d) {return d.type == 'line' && d.yAxis == 2})
+      var hasBars1 = data.filter(function(d) {return d.type == 'bar' && d.yAxis == 1})
+      var hasBars2 = data.filter(function(d) {return d.type == 'bar' && d.yAxis == 2})
+      var hasStack1 = data.filter(function(d) {return d.type == 'area' && d.yAxis == 1})
+      var hasStack2 = data.filter(function(d) {return d.type == 'area' && d.yAxis == 2})        
 
-      if(dataBars1.length){d3.transition(bars1Wrap).call(bars1);}
-      if(dataBars2.length){d3.transition(bars2Wrap).call(bars2);}
+      if(hasStack1.length){d3.transition(stack1Wrap).call(stack1);}
+      if(hasStack2.length){d3.transition(stack2Wrap).call(stack2);}
 
-      if(dataLines1.length){d3.transition(lines1Wrap).call(lines1);}
-      if(dataLines2.length){d3.transition(lines2Wrap).call(lines2);}
+      if(hasBars1.length){d3.transition(bars1Wrap).call(bars1);}
+      if(hasBars2.length){d3.transition(bars2Wrap).call(bars2);}
+
+      if(hasLines1.length){d3.transition(lines1Wrap).call(lines1);}
+      if(hasLines2.length){d3.transition(lines2Wrap).call(lines2);}
       
 
 
@@ -9680,6 +9687,9 @@ nv.models.multiChart = function() {
       g.select('.y2.axis')
           .style('opacity', series2.length ? 1 : 0)
           .attr('transform', 'translate(' + x.range()[1] + ',0)');
+
+      g.select('.y1.axis')
+          .style('opacity', series1.length ? 1 : 0)          
 
       legend.dispatch.on('stateChange', function(newState) { 
         chart.update();
