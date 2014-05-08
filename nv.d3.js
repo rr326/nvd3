@@ -5429,6 +5429,7 @@ nv.models.lineChart = function() {
     , noData = 'No Data Available.'
     , dispatch = d3.dispatch('tooltipShow', 'tooltipHide', 'stateChange', 'changeState')
     , transitionDuration = 250
+    , clamp = false 
     ;
 
   xAxis
@@ -5517,6 +5518,9 @@ nv.models.lineChart = function() {
 
       x = lines.xScale();
       y = lines.yScale();
+
+      x.clamp(clamp); 
+      y.clamp(clamp);
 
       //------------------------------------------------------------
 
@@ -5853,6 +5857,12 @@ nv.models.lineChart = function() {
   chart.transitionDuration = function(_) {
     if (!arguments.length) return transitionDuration;
     transitionDuration = _;
+    return chart;
+  };
+
+   chart.clamp = function(_) {
+    if (!arguments.length) return clamp;
+    clamp = _;
     return chart;
   };
 
