@@ -56,7 +56,7 @@ nv.render = function render(step) {
   nv.render.active = true;
   nv.dispatch.render_start();
 
-  setTimeout(function() {
+  setTimeout(function innerFn() {
     var chart, graph;
 
     for (var i = 0; i < step && (graph = nv.render.queue[i]); i++) {
@@ -67,7 +67,7 @@ nv.render = function render(step) {
 
     nv.render.queue.splice(0, i);
 
-    if (nv.render.queue.length) setTimeout(arguments.callee, 0);
+    if (nv.render.queue.length) setTimeout(innerFn, 0);
     else {
       nv.dispatch.render_end();
       nv.render.active = false;
